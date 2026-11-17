@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Ágil - Certificación ACPC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .chat-container { height: calc(100vh - 350px); min-height: 300px; }
+        .posture-radio:checked + label {
+            background-color: #3b82f6; /* blue-500 */
+            color: white;
+            border-color: #3b82f6;
+        }
+        .posture-radio:focus + label {
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.5); /* indigo-600 */
+        }
+        /* Markdown simple styling for feedback */
+        .feedback-content h3 { font-size: 1.125rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; color: #0f172a; }
+        .feedback-content p { margin-bottom: 0.75rem; color: #334155; }
+        .feedback-content ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75rem; color: #334155; }
+    </style>
+</head>
+<body class="text-slate-800 h-screen flex flex-col overflow-hidden bg-slate-50">
+
+    <!-- Header -->
+    <header class="bg-slate-900 shadow-md z-10 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-500 text-white p-2.5 rounded-lg shadow-sm">
+                    <i class="fa-solid fa-user-tie"></i>
+                </div>
+                <h1 class="font-bold text-xl tracking-tight text-white">ACPC Executive Simulator</h1>
+            </div>
+            <div id="userInfo" class="hidden flex items-center gap-4">
+                <span class="text-sm text-slate-300 font-medium bg-slate-800 px-3 py-1 rounded-full border border-slate-700" id="userDisplay"></span>
+                <button id="logoutBtn" class="text-sm text-slate-400 hover:text-white font-medium transition-colors"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 relative overflow-hidden flex flex-col">
+        
+        <!-- View: Login -->
+        <div id="loginView" class="absolute inset-0 flex items-center justify-center bg-slate-100 z-20">
+            <div class="bg-white p-8 sm:p-10 rounded-2xl shadow-xl max-w-lg w-full border border-slate-200">
+                <div class="text-center mb-8">
+                    <div class="bg-indigo-100 text-indigo-700 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+                        <i class="fa-solid fa-briefcase text-2xl"></i>
+                    </div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Simulador Ágil ACPC</h2>
+                    <p class="text-slate-500 mt-2 font-medium">Módulo 2: Coaching, Facilitación y Enseñanza</p>
+                </div>
+                
+                <div class="mb-6">
+                    <label for="coachNameInput" class="block text-sm font-bold text-slate-700 mb-2">Nombre del Coach <span class="text-red-500">*</span></label>
+                    <input type="text" id="coachNameInput" placeholder="Ej. Carlos Mendoza" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none bg-slate-50 text-slate-900 font-medium" required>
+                    <p class="text-xs text-slate-500 mt-2"><i class="fa-solid fa-circle-info"></i> Este nombre se utilizará en tus interacciones con el equipo.</p>
+                </div>
+
+                <button id="loginBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                    <span>Ingresar al Entrenamiento Ejecutivo</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+                <div id="loginLoading" class="hidden mt-4 text-indigo-600 text-center">
+                    <i class="fa-solid fa-circle-notch fa-spin text-2xl"></i>
+                    <p class="text-sm mt-2 font-medium">Autenticando sesión...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Dashboard / Instructions -->
+        <div id="dashboardView" class="hidden absolute inset-0 overflow-y-auto bg-slate-50 z-10 p-4 sm:p-8">
+            <div class="max-w-5xl mx-auto space-y-8 pb-12">
+                
+                <!-- Guía del Simulador -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
+                    <h2 class="text-2xl font-bold text-slate-900 mb-4 border-b border-slate-100 pb-4">
+                        <i class="fa-solid fa-book-open-reader text-indigo-600 mr-2"></i> Guía del Simulador y Objetivos
+                    </h2>
+                    <div class="prose prose-slate max-w-none text-slate-600 space-y-4">
+                        <p class="text-lg text-slate-700 font-medium">Bienvenido/a al entorno de práctica ejecutiva, <span id="welcomeNameDisplay" class="font-bold text-indigo-600">Coach</span>. Tu objetivo no es resolver problemas técnicos por el equipo, sino <strong>guiarlos hacia el éxito</strong> aplicando el ADN del Agile Coach.</p>
+                        
+                        <div class="grid md:grid-cols-2 gap-6 mt-6">
+                            <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+                                <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-list-check text-indigo-500"></i> Dinámica de Trabajo</h3>
+                                <ul class="list-disc pl-5 space-y-2 text-sm text-slate-700">
+                                    <li>Enfrentarás <strong>5 desafíos progresivos</strong> con problemas reales.</li>
+                                    <li>Antes de cada mensaje, debes <strong>seleccionar tu postura</strong>.</li>
+                                    <li>Deberás sostener una <strong>conversación continua</strong> (mínimo 3-4 turnos). El equipo virtual es humano y mostrará resistencia. ¡La primera frase nunca es suficiente!</li>
+                                </ul>
+                            </div>
+                            <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+                                <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-bullseye text-indigo-500"></i> Las 4 Posturas Clave</h3>
+                                <ul class="list-disc pl-5 space-y-2 text-sm text-slate-700">
+                                    <li><strong>Facilitar:</strong> Guiar neutralmente el proceso sin tomar decisiones por el grupo. Cierra con acuerdos.</li>
+                                    <li><strong>Enseñar:</strong> Detectar el nivel de madurez (Shu-Ha-Ri) y transferir conocimiento preciso.</li>
+                                    <li><strong>Mentoring:</strong> Compartir experiencia propia como una opción a seguir.</li>
+                                    <li><strong>Coaching:</strong> Hacer preguntas reflexivas para revelar creencias y motivar el cambio.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between items-end mb-2 border-b border-slate-200 pb-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900">Misiones de Entrenamiento</h2>
+                        <p class="text-sm text-slate-500 mt-1 font-medium">Selecciona un desafío para iniciar o continuar tu sesión.</p>
+                    </div>
+                </div>
+                
+                <div id="challengesList" class="grid gap-4 md:grid-cols-1">
+                    <!-- Challenges injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Simulation Room -->
+        <div id="simulationView" class="hidden absolute inset-0 flex flex-col md:flex-row bg-white z-20 overflow-hidden">
+            
+            <!-- Left Panel: Context -->
+            <div class="w-full md:w-1/4 bg-slate-900 text-white flex flex-col border-r border-slate-800 shrink-0 max-h-[30vh] md:max-h-full md:h-full overflow-y-auto z-30 shadow-xl">
+                <div class="p-4 border-b border-slate-800 flex justify-between items-center sticky top-0 bg-slate-900/95 backdrop-blur z-10">
+                    <button id="backToDashBtn" class="text-slate-400 hover:text-white transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-800 bg-slate-800/50">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-indigo-400">Contexto Operativo</span>
+                    <div class="w-8"></div>
+                </div>
+                <div class="p-5 md:p-6 flex-1">
+                    <h3 id="simChallengeTitle" class="text-lg md:text-xl font-bold mb-4 text-white leading-tight">Desafío X</h3>
+                    <div class="space-y-5 text-slate-300 text-sm">
+                        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
+                            <h4 class="text-indigo-300 font-bold mb-2 uppercase text-[10px] tracking-wider flex items-center gap-2"><i class="fa-solid fa-file-lines"></i> Situación</h4>
+                            <p id="simChallengeContext" class="leading-relaxed">Cargando...</p>
+                        </div>
+                        <div class="bg-indigo-900/20 p-4 rounded-xl border border-indigo-500/20">
+                            <h4 class="text-indigo-300 font-bold mb-2 uppercase text-[10px] tracking-wider flex items-center gap-2"><i class="fa-solid fa-crosshairs"></i> Tu Objetivo</h4>
+                            <p id="simChallengeGoal" class="leading-relaxed font-medium text-indigo-100">Cargando...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4 border-t border-slate-800 bg-slate-900 sticky bottom-0">
+                    <button id="evaluateBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ring-1 ring-white/20">
+                        <i class="fa-solid fa-clipboard-check text-lg"></i> Concluir y Evaluar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel: Chat Area -->
+            <div class="flex-1 flex flex-col bg-slate-50 relative h-[70vh] md:h-full">
+                <!-- Sim Header -->
+                <div class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shrink-0 shadow-sm z-10">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-people-group text-indigo-600"></i> Equipo Alpha
+                        </h3>
+                        <p class="text-xs text-emerald-600 font-semibold flex items-center gap-1.5 mt-0.5"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span> Conectados y esperando al coach...</p>
+                    </div>
+                </div>
+
+                <!-- Chat Container -->
+                <div id="chatContainer" class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 flex flex-col gap-5 pb-48">
+                    <!-- Messages will be injected here -->
+                </div>
+                
+                <!-- Hint Area -->
+                <div id="hintArea" class="hidden absolute bottom-[140px] left-0 right-0 flex justify-center z-10 pointer-events-none">
+                    <button id="showHintBtn" class="pointer-events-auto bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-6 rounded-full shadow-lg transition-all flex items-center gap-2 text-sm border-2 border-white animate-bounce">
+                        <i class="fa-solid fa-triangle-exclamation"></i> ¿Muchas fallas? Ver respuesta del Master Coach
+                    </button>
+                </div>
+
+                <!-- Input Area -->
+                <div class="absolute bottom-0 left-0 right-0 border-t border-slate-200 bg-white p-4 shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.05)] z-20">
+                    <!-- Loading Overlay for API calls -->
+                    <div id="apiLoadingOverlay" class="hidden absolute inset-0 bg-white/90 backdrop-blur-sm z-10 flex items-center justify-center rounded-t-2xl">
+                        <div class="flex flex-col items-center gap-3 text-indigo-600 font-medium">
+                            <i class="fa-solid fa-circle-notch fa-spin text-3xl"></i>
+                            <span class="text-sm">El equipo está discutiendo tu respuesta...</span>
+                        </div>
+                    </div>
+
+                    <div class="max-w-5xl mx-auto">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Selecciona tu Postura de Intervención:</label>
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <div class="relative flex-1 min-w-[120px]">
+                                <input type="radio" name="posture" id="postureFacilitate" value="Facilitar" class="peer sr-only posture-radio" checked>
+                                <label for="postureFacilitate" class="cursor-pointer w-full justify-center px-3 py-2 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 transition-all select-none flex items-center gap-2 peer-checked:bg-indigo-600 peer-checked:text-white peer-checked:border-indigo-600 peer-checked:shadow-md">
+                                    <i class="fa-solid fa-users-viewfinder"></i> Facilitar
+                                </label>
+                            </div>
+                            <div class="relative flex-1 min-w-[120px]">
+                                <input type="radio" name="posture" id="postureTeach" value="Enseñar" class="peer sr-only posture-radio">
+                                <label for="postureTeach" class="cursor-pointer w-full justify-center px-3 py-2 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 transition-all select-none flex items-center gap-2 peer-checked:bg-indigo-600 peer-checked:text-white peer-checked:border-indigo-600 peer-checked:shadow-md">
+                                    <i class="fa-solid fa-chalkboard-user"></i> Enseñar
+                                </label>
+                            </div>
+                            <div class="relative flex-1 min-w-[120px]">
+                                <input type="radio" name="posture" id="postureMentor" value="Mentoring" class="peer sr-only posture-radio">
+                                <label for="postureMentor" class="cursor-pointer w-full justify-center px-3 py-2 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 transition-all select-none flex items-center gap-2 peer-checked:bg-indigo-600 peer-checked:text-white peer-checked:border-indigo-600 peer-checked:shadow-md">
+                                    <i class="fa-solid fa-handshake-angle"></i> Mentoring
+                                </label>
+                            </div>
+                            <div class="relative flex-1 min-w-[120px]">
+                                <input type="radio" name="posture" id="postureCoach" value="Coaching" class="peer sr-only posture-radio">
+                                <label for="postureCoach" class="cursor-pointer w-full justify-center px-3 py-2 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 transition-all select-none flex items-center gap-2 peer-checked:bg-indigo-600 peer-checked:text-white peer-checked:border-indigo-600 peer-checked:shadow-md">
+                                    <i class="fa-solid fa-compass"></i> Coaching
+                                </label>
+                            </div>
+                        </div>
+
+                        <form id="chatForm" class="flex gap-2">
+                            <textarea id="chatInput" rows="2" class="flex-1 resize-none rounded-xl border-2 border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-0 sm:text-sm p-3 font-medium text-slate-800 placeholder-slate-400 bg-slate-50 transition-colors" placeholder="Escribe tu intervención estratégica aquí..."></textarea>
+                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 flex items-center justify-center transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fa-solid fa-paper-plane text-lg"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Evaluation Modal -->
+        <div id="evaluationModal" class="hidden absolute inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden transform transition-all">
+                <div class="bg-gradient-to-r from-indigo-600 to-blue-600 p-5 shrink-0 text-white flex justify-between items-center">
+                    <h3 class="text-xl font-bold flex items-center gap-2"><i class="fa-solid fa-clipboard-check"></i> Feedback del Entrenador</h3>
+                    <button id="closeEvalModalBtn" class="text-white/80 hover:text-white transition-colors">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-6 overflow-y-auto flex-1 text-sm feedback-content" id="evaluationContent">
+                    <div class="flex flex-col items-center justify-center py-10 text-gray-500">
+                        <i class="fa-solid fa-magnifying-glass-chart text-4xl mb-4 animate-bounce text-indigo-400"></i>
+                        <p class="text-lg font-medium">Analizando tu desempeño...</p>
+                        <p class="text-sm">Evaluando posturas, facilitación y niveles de cambio.</p>
+                    </div>
+                </div>
+                <div class="p-4 border-t border-gray-100 bg-gray-50 shrink-0 text-right">
+                    <button id="doneEvalBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-6 rounded-lg transition-colors">Cerrar Sesión</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Master Coach Modal (Success & Hint) -->
+        <div id="masterCoachModal" class="hidden absolute inset-0 bg-slate-900/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full flex flex-col overflow-hidden transform transition-all border-t-8 border-emerald-500">
+                <div class="p-6 md:p-8">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-2xl shrink-0">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                        </div>
+                        <div>
+                            <h3 id="mcModalTitle" class="text-2xl font-bold text-slate-800">¡Desafío Superado!</h3>
+                            <p id="mcModalSubtitle" class="text-slate-500 font-medium">Análisis del Master Coach</p>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+                        <p class="text-sm font-bold text-indigo-600 uppercase tracking-wider mb-2">Respuesta ideal esperada:</p>
+                        <p id="mcModalFeedback" class="text-slate-700 leading-relaxed font-medium"></p>
+                    </div>
+                </div>
+                <div class="bg-slate-100 px-6 py-4 flex justify-end gap-3">
+                    <button id="mcPassChallengeBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-6 rounded-xl transition-all shadow-md">
+                        Siguiente Desafío <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Firebase Scripts -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Environment variables
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'agile-coach-sim';
+        const fbConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const customToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const geminiApiKey = ""; // Passed natively by the environment
+
+        // Fallback mock config if not in environment (for testing layout)
+        const firebaseConfig = fbConfig || {
+            apiKey: "mock-key",
+            authDomain: "mock.firebaseapp.com",
+            projectId: "mock-project",
+            storageBucket: "mock.appspot.com",
+            messagingSenderId: "123",
+            appId: "1:123:web:123"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // State
+        let currentUser = null;
+        let currentSessionId = null;
+        let currentChallengeDef = null;
+        let chatHistory = [];
+        let isSimulating = false;
+        let coachName = "Coach";
+        let currentTurnCount = 0;
+        let lastMasterCoachFeedback = "";
+
+        // Challenges Data
+        const challengesData = [
+            {
+                id: 'c1',
+                title: 'Desafío 1: Conflicto Directivo',
+                context: 'Los directores de Operaciones y Ventas están discutiendo acaloradamente sobre la asignación del presupuesto trimestral. No logran llegar a un acuerdo y la tensión está escalando. Te exigen que tú tomes la decisión final.',
+                goal: 'Aplica la Facilitación (7 pasos). Mantente neutral, no tomes la decisión por ellos y guíalos paso a paso hacia un acuerdo accionable y colaborativo.',
+                initPrompt: 'INICIAR_DESAFIO: Actúa como el Director de Operaciones y el Director de Ventas discutiendo por el presupuesto. Están frustrados. Te piden a ti (el coach/facilitador) que decidas por ellos. Resistete a acuerdos fáciles, muestra terquedad humana al inicio.'
+            },
+            {
+                id: 'c2',
+                title: 'Desafío 2: El líder de procesos novato',
+                context: 'Un nuevo Líder de Procesos detiene las reuniones operativas constantemente haciendo preguntas básicas sobre cómo armar un diagrama de Gantt y cómo estructurar un plan de trabajo.',
+                goal: 'Aplica Enseñanza. Transfiere el conocimiento de forma directa, breve y precisa (Microclase) sin frenar el impulso del equipo administrativo.',
+                initPrompt: 'INICIAR_DESAFIO: Actúa como "Luis", un Líder de Procesos nuevo. Estás confundido sobre por qué tienes que documentar un plan operativo o hacer un diagrama de Gantt. Eres inexperto, necesitas reglas claras de administración de proyectos.'
+            },
+            {
+                id: 'c3',
+                title: 'Desafío 3: El gerente desmotivado',
+                context: 'Una Gerente de Proyecto se siente abrumada. En una sesión 1 a 1 te confiesa que siente que "nada de lo que hace funciona" y cree que su equipo carece de compromiso hacia la empresa.',
+                goal: 'Aplica Coaching Profesional. Usa preguntas poderosas para ayudarla a explorar opciones y encontrar su propia dirección. No le des consejos ni respuestas directas.',
+                initPrompt: 'INICIAR_DESAFIO: Actúa como "Marta", una Gerente de Proyecto muy desmotivada en una sesión 1 a 1. Sientes que tu equipo te ignora. Estás a la defensiva. Si el coach te da consejos directos, recházalos. Solo reflexiona si te hace preguntas que te hagan pensar.'
+            },
+            {
+                id: 'c4',
+                title: 'Desafío 4: Atasco en el Sistema de Gestión',
+                context: 'El equipo corporativo no logra implementar el nuevo Sistema de Gestión Documental. Llevan meses fallando y enfrentan mucha resistencia al cambio porque no tienen experiencia en transiciones tecnológicas.',
+                goal: 'Aplica Mentoring. Basado en tu rol, comparte conocimiento desde tu experiencia previa para aconsejarles una ruta a seguir. Ofrécelo como una opción, no como una orden.',
+                initPrompt: 'INICIAR_DESAFIO: Actúa como un comité corporativo. Admiten que no saben cómo lidiar con la resistencia al cambio del nuevo Sistema de Gestión Documental. Buscan activamente un consejo basado en tu experiencia.'
+            },
+            {
+                id: 'c5',
+                title: 'Desafío 5: Junta mensual híbrida',
+                context: 'Junta mensual de resultados. Hay un conflicto activo sobre una falla en auditoría, un analista no entiende un indicador clave (KPI) y un gerente duda de su capacidad de liderazgo.',
+                goal: 'Demuestra maestría alternando posturas. Facilita el conflicto, Enseña sobre el indicador, y haz Coaching/Mentoring según quien hable.',
+                initPrompt: 'INICIAR_DESAFIO: Actúa como un comité directivo caótico. Hay discusiones, falta de conocimiento e inseguridades. Exige que el coach cambie de postura constantemente para manejar a las diferentes personas.'
+            }
+        ];
+
+        // System Instruction for Gemini
+        const systemPrompt = `Eres un simulador interactivo experto para entrenar Coaches Organizacionales, enfocado en líderes de proyectos y administradores. 
+El Coach se llama: {COACH_NAME}.
+ESTÁ TOTALMENTE PROHIBIDO usar lenguaje de software, Agile o Scrum (NO uses: Scrum, Sprints, Agile, Product Owner, CI/CD, Daily). Usa terminología administrativa (Proyectos, Operaciones, Ventas, Procesos, Gantt, KPIs, Junta, Comité).
+
+REGLAS DE INTERACCIÓN:
+1. El usuario declarará su [Postura] (Facilitar, Enseñar, Mentoring, Coaching) y enviará su mensaje.
+2. Reacciona de forma REALISTA Y HUMANA. No te resuelvas a la primera.
+3. Si el coach usa la postura INCORRECTA, penalízalo con mayor resistencia o confusión.
+4. Postura Facilitar: Esperas guía neutral, NO decisiones.
+5. Postura Enseñar: Esperas explicaciones administrativas claras. 
+6. Postura Mentoring: Esperas consejos de experiencia.
+7. Postura Coaching: Esperas preguntas reveladoras, NO respuestas directas.
+
+EVALUACIÓN DEL ÉXITO:
+- is_success debe ser true SOLO si el coach ha mantenido la postura correcta durante la conversación y ha logrado guiar al equipo a una epifanía, acuerdo o aprendizaje. Si es el primer o segundo turno, suele ser false.
+- master_coach_feedback: Escribe detalladamente qué respondería o haría un experto ante la última frase del usuario.`;
+
+        // UI Elements
+        const views = {
+            login: document.getElementById('loginView'),
+            dashboard: document.getElementById('dashboardView'),
+            simulation: document.getElementById('simulationView')
+        };
+        const loginBtn = document.getElementById('loginBtn');
+        const loginLoading = document.getElementById('loginLoading');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userInfo = document.getElementById('userInfo');
+        const userDisplay = document.getElementById('userDisplay');
+        const backToDashBtn = document.getElementById('backToDashBtn');
+        const chatForm = document.getElementById('chatForm');
+        const chatInput = document.getElementById('chatInput');
+        const chatContainer = document.getElementById('chatContainer');
+        const evaluateBtn = document.getElementById('evaluateBtn');
+        const evaluationModal = document.getElementById('evaluationModal');
+        const evaluationContent = document.getElementById('evaluationContent');
+        const closeEvalModalBtn = document.getElementById('closeEvalModalBtn');
+        const doneEvalBtn = document.getElementById('doneEvalBtn');
+        const apiLoadingOverlay = document.getElementById('apiLoadingOverlay');
+        const hintArea = document.getElementById('hintArea');
+        const showHintBtn = document.getElementById('showHintBtn');
+        const masterCoachModal = document.getElementById('masterCoachModal');
+        const mcModalTitle = document.getElementById('mcModalTitle');
+        const mcModalSubtitle = document.getElementById('mcModalSubtitle');
+        const mcModalFeedback = document.getElementById('mcModalFeedback');
+        const mcPassChallengeBtn = document.getElementById('mcPassChallengeBtn');
+
+        // Navigation functions
+        function showView(viewName) {
+            Object.values(views).forEach(v => v.classList.add('hidden'));
+            views[viewName].classList.remove('hidden');
+        }
+
+        // Firebase Auth Logic
+        async function handleLogin() {
+            const nameInput = document.getElementById('coachNameInput').value.trim();
+            if(!nameInput) {
+                alert("Por favor, ingresa tu nombre como Coach para personalizar la experiencia.");
+                return;
+            }
+            coachName = nameInput;
+
+            loginBtn.classList.add('hidden');
+            loginLoading.classList.remove('hidden');
+            
+            try {
+                if (customToken) {
+                    await signInWithCustomToken(auth, customToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Auth Error:", error);
+                alert("Error al iniciar sesión.");
+                loginBtn.classList.remove('hidden');
+                loginLoading.classList.add('hidden');
+            }
+        }
+
+        loginBtn.addEventListener('click', handleLogin);
+        logoutBtn.addEventListener('click', () => signOut(auth));
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                userInfo.classList.remove('hidden');
+                
+                // Set name display
+                document.getElementById('welcomeNameDisplay').textContent = coachName;
+                userDisplay.innerHTML = `<i class="fa-solid fa-user-circle mr-1"></i> ${coachName}`;
+                
+                await loadChallenges();
+                showView('dashboard');
+            } else {
+                currentUser = null;
+                userInfo.classList.add('hidden');
+                loginBtn.classList.remove('hidden');
+                loginLoading.classList.add('hidden');
+                showView('login');
+            }
+        });
+
+        // Dashboard Logic (Challenges)
+        async function loadChallenges() {
+            if (!currentUser) return;
+            try {
+                // Fetch saved session progress
+                const sessionsRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'sessions');
+                let savedSessions = [];
+                try {
+                    const docs = await getDocs(sessionsRef);
+                    docs.forEach(d => savedSessions.push({id: d.id, ...d.data()}));
+                } catch(e) {
+                    console.log("Error loading sessions", e);
+                }
+
+                const challengesList = document.getElementById('challengesList');
+                challengesList.innerHTML = '';
+                
+                challengesData.forEach((challenge, index) => {
+                    // Find if user has a session for this challenge
+                    const session = savedSessions.find(s => s.challengeId === challenge.id);
+                    const isCompleted = session && !!session.feedback;
+                    const isStarted = session && !session.feedback;
+                    
+                    let statusHtml = '<span class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full"><i class="fa-solid fa-lock-open"></i> Disponible</span>';
+                    if (isCompleted) {
+                        statusHtml = '<span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full"><i class="fa-solid fa-check-double"></i> Evaluado</span>';
+                    } else if (isStarted) {
+                        statusHtml = '<span class="text-xs font-bold text-amber-700 bg-amber-100 px-3 py-1 rounded-full"><i class="fa-solid fa-spinner fa-spin"></i> En Progreso</span>';
+                    }
+
+                    const card = document.createElement('div');
+                    card.className = `bg-white p-6 rounded-2xl border-2 ${isStarted ? 'border-amber-400 shadow-md' : 'border-slate-200'} shadow-sm hover:border-indigo-400 hover:shadow-lg transition-all cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4 group`;
+                    card.innerHTML = `
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="bg-indigo-100 text-indigo-700 w-10 h-10 rounded-xl flex items-center justify-center font-bold shadow-inner shrink-0">
+                                    ${index + 1}
+                                </div>
+                                <h4 class="font-extrabold text-lg text-slate-900 group-hover:text-indigo-700 transition-colors">${challenge.title}</h4>
+                            </div>
+                            <p class="text-sm text-slate-600 pl-13 line-clamp-2 ml-13">${challenge.context}</p>
+                        </div>
+                        <div class="flex flex-row md:flex-col items-center md:items-end justify-between shrink-0 gap-3">
+                            ${statusHtml}
+                            <button class="bg-slate-900 hover:bg-indigo-600 text-white text-sm font-bold py-2 px-6 rounded-xl transition-colors shadow-md">
+                                ${isCompleted ? 'Ver Feedback' : (isStarted ? 'Continuar' : 'Iniciar Desafío')}
+                            </button>
+                        </div>
+                    `;
+                    
+                    card.addEventListener('click', () => startOrResumeChallenge(challenge, session));
+                    challengesList.appendChild(card);
+                });
+            } catch (error) {
+                console.error("Error loading challenges:", error);
+            }
+        }
+
+        async function startOrResumeChallenge(challenge, existingSession) {
+            if (!currentUser) return;
+            
+            currentChallengeDef = challenge;
+            currentTurnCount = 0;
+            hintArea.classList.add('hidden');
+            document.getElementById('simChallengeGoal').textContent = challenge.goal;
+
+            if (existingSession) {
+                resumeSession(existingSession.id, existingSession);
+            } else {
+                try {
+                    const sessionsRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'sessions');
+                    const initialHistory = [];
+                    const docRef = await addDoc(sessionsRef, {
+                        challengeId: challenge.id,
+                        createdAt: serverTimestamp(),
+                        history: initialHistory,
+                        feedback: null,
+                    });
+                    
+                    currentSessionId = docRef.id;
+                    chatHistory = initialHistory;
+                    isSimulating = true;
+                    
+                    startSimulationUI();
+                    
+                    // Trigger first message from Gemini based on Challenge Prompt
+                    await generateGeminiResponse(challenge.initPrompt);
+                } catch (error) {
+                    console.error("Error creating session:", error);
+                }
+            }
+        }
+
+        async function resumeSession(sessionId, sessionData) {
+            currentSessionId = sessionId;
+            chatHistory = sessionData.history || [];
+            isSimulating = !sessionData.feedback;
+            currentTurnCount = sessionData.turnCount || 0;
+            
+            startSimulationUI();
+            
+            chatContainer.innerHTML = '';
+            chatHistory.forEach(msg => {
+                if(msg.role !== 'system') { // Don't render system instructions if stored
+                   // We ignore custom init prompts on resume visually if we can, but since it's just user/model, we render
+                   if(msg.role === 'user' && msg.parts[0].text.startsWith('INICIAR_DESAFIO')) return;
+                   if(msg.role === 'user' && msg.parts[0].text === '[COMANDO_EVALUACION]') return;
+                   
+                   renderMessage(msg.role === 'model' ? 'team' : 'coach', msg.parts[0].text);
+                }
+            });
+
+            if (sessionData.feedback) {
+                evaluateBtn.classList.add('hidden');
+                document.querySelector('.posture-radio').closest('.max-w-5xl').classList.add('hidden');
+                showFeedbackModal(sessionData.feedback);
+            } else {
+                evaluateBtn.classList.remove('hidden');
+                document.querySelector('.posture-radio').closest('.max-w-5xl').classList.remove('hidden');
+            }
+            scrollToBottom();
+        }
+
+        function startSimulationUI() {
+            showView('simulation');
+            chatInput.value = '';
+            chatInput.focus();
+        }
+
+        backToDashBtn.addEventListener('click', () => {
+            loadChallenges();
+            showView('dashboard');
+        });
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!isSimulating) return;
+
+            const text = chatInput.value.trim();
+            if (!text) return;
+
+            currentTurnCount++;
+
+            const selectedPosture = document.querySelector('input[name="posture"]:checked').value;
+            const formattedMessage = `[Postura: ${selectedPosture}] ${text}`;
+
+            chatInput.value = '';
+            renderMessage('coach', formattedMessage);
+            
+            // Add to history
+            chatHistory.push({ role: "user", parts: [{ text: formattedMessage }] });
+            await saveSessionProgress();
+
+            await generateGeminiResponse();
+        });
+
+        function renderMessage(sender, text) {
+            const wrapper = document.createElement('div');
+            wrapper.className = `flex w-full ${sender === 'coach' ? 'justify-end' : 'justify-start'}`;
+            
+            let html = '';
+            
+            if (sender === 'coach') {
+                // Extract posture and message
+                const match = text.match(/\[Postura: (.*?)\] (.*)/s);
+                let posture = "General";
+                let msg = text;
+                
+                if (match) {
+                    posture = match[1];
+                    msg = match[2];
+                }
+
+                html = `
+                    <div class="max-w-[85%] md:max-w-[75%]">
+                        <div class="flex items-center justify-end gap-2 mb-1.5">
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">${coachName} <span class="text-indigo-500 mx-1">•</span> <span class="text-indigo-600">${posture}</span></span>
+                        </div>
+                        <div class="bg-indigo-600 text-white rounded-2xl rounded-tr-sm py-3.5 px-5 shadow-md border border-indigo-500">
+                            <p class="whitespace-pre-wrap text-[15px] font-medium leading-relaxed">${msg}</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html = `
+                    <div class="max-w-[85%] md:max-w-[75%] flex gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-white text-indigo-600 flex items-center justify-center shrink-0 mt-6 shadow-md border border-slate-200">
+                            <i class="fa-solid fa-users text-lg"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 mb-1.5 mt-1">
+                                <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Equipo Alpha</span>
+                            </div>
+                            <div class="bg-white border border-slate-200 text-slate-800 rounded-2xl rounded-tl-sm py-3.5 px-5 shadow-sm">
+                                <p class="whitespace-pre-wrap text-[15px] font-medium leading-relaxed">${text}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            wrapper.innerHTML = html;
+            chatContainer.appendChild(wrapper);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Handle Enter key for submit (shift+enter for newline)
+        chatInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                chatForm.dispatchEvent(new Event('submit'));
+            }
+        });
+
+        // Gemini API Integration
+        async function generateGeminiResponse(customMessage = null) {
+            apiLoadingOverlay.classList.remove('hidden');
+            const submitBtn = chatForm.querySelector('button');
+            submitBtn.disabled = true;
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${geminiApiKey}`;
+            
+            const localizedSystemPrompt = systemPrompt.replace('{COACH_NAME}', coachName);
+
+            let contents = [];
+            
+            if (chatHistory.length > 0 && !customMessage) {
+                contents = [...chatHistory];
+            } else if (customMessage) {
+                contents = [...chatHistory, { role: "user", parts: [{ text: customMessage }] }];
+            }
+
+            const payload = {
+                contents: contents,
+                systemInstruction: { parts: [{ text: localizedSystemPrompt }] },
+                generationConfig: {
+                    temperature: 0.75,
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            "team_reply": { type: "STRING" },
+                            "is_success": { type: "BOOLEAN" },
+                            "master_coach_feedback": { type: "STRING" }
+                        },
+                        required: ["team_reply", "is_success", "master_coach_feedback"]
+                    }
+                }
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                
+                const result = await response.json();
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (jsonText) {
+                    const parsed = JSON.parse(jsonText);
+                    
+                    if (customMessage === "[COMANDO_EVALUACION]") {
+                        return parsed.master_coach_feedback || parsed.team_reply; 
+                    }
+
+                    lastMasterCoachFeedback = parsed.master_coach_feedback;
+                    
+                    // Manage UI hint state
+                    if (!parsed.is_success && currentTurnCount >= 3) {
+                        hintArea.classList.remove('hidden');
+                    } else {
+                        hintArea.classList.add('hidden');
+                    }
+
+                    if (customMessage && customMessage.startsWith("INICIAR_DESAFIO")) {
+                        chatHistory.push({ role: "user", parts: [{ text: customMessage }] });
+                        chatHistory.push({ role: "model", parts: [{ text: parsed.team_reply }] });
+                        renderMessage('team', parsed.team_reply);
+                        await saveSessionProgress();
+                    } else {
+                        chatHistory.push({ role: "model", parts: [{ text: parsed.team_reply }] });
+                        renderMessage('team', parsed.team_reply);
+                        await saveSessionProgress();
+
+                        if (parsed.is_success) {
+                            showMasterCoachModal("¡Desafío Superado!", "Lograste el objetivo. Así es como lo ve un experto:", parsed.master_coach_feedback);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Gemini API Error:", error);
+                renderMessage('team', "Tuvimos un problema de conexión temporal. ¿Puedes repetir tu intervención?");
+            } finally {
+                apiLoadingOverlay.classList.add('hidden');
+                submitBtn.disabled = false;
+                chatInput.focus();
+            }
+        }
+
+        async function saveSessionProgress() {
+            if (!currentUser || !currentSessionId) return;
+            try {
+                const sessionRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'sessions', currentSessionId);
+                const updateData = { history: chatHistory, turnCount: currentTurnCount, updatedAt: serverTimestamp() };
+                await updateDoc(sessionRef, updateData);
+            } catch (error) {
+                console.error("Error saving progress:", error);
+            }
+        }
+
+        // Hint System & Modals
+        showHintBtn.addEventListener('click', () => {
+            showMasterCoachModal("Ayuda del Master Coach", "Notas muchas dificultades. Esta sería la intervención ideal ahora:", lastMasterCoachFeedback);
+        });
+
+        function showMasterCoachModal(title, subtitle, feedback) {
+            mcModalTitle.textContent = title;
+            mcModalSubtitle.textContent = subtitle;
+            mcModalFeedback.textContent = feedback;
+            
+            // Adjust styling based on success vs hint
+            if (title.includes("Ayuda")) {
+                masterCoachModal.querySelector('div.bg-white').classList.replace('border-emerald-500', 'border-amber-500');
+                masterCoachModal.querySelector('div.bg-emerald-100').classList.replace('bg-emerald-100', 'bg-amber-100');
+                masterCoachModal.querySelector('div.text-emerald-600').classList.replace('text-emerald-600', 'text-amber-600');
+                masterCoachModal.querySelector('.fa-graduation-cap').classList.replace('fa-graduation-cap', 'fa-lightbulb');
+                mcPassChallengeBtn.innerHTML = 'Forzar Pase de Desafío <i class="fa-solid fa-forward ml-1"></i>';
+                mcPassChallengeBtn.classList.replace('bg-emerald-600', 'bg-amber-600');
+                mcPassChallengeBtn.classList.replace('hover:bg-emerald-700', 'hover:bg-amber-700');
+            } else {
+                masterCoachModal.querySelector('div.bg-white').classList.replace('border-amber-500', 'border-emerald-500');
+                masterCoachModal.querySelector('div.bg-amber-100').classList.replace('bg-amber-100', 'bg-emerald-100');
+                masterCoachModal.querySelector('div.text-amber-600').classList.replace('text-amber-600', 'text-emerald-600');
+                masterCoachModal.querySelector('.fa-lightbulb').classList.replace('fa-lightbulb', 'fa-graduation-cap');
+                mcPassChallengeBtn.innerHTML = 'Siguiente Desafío <i class="fa-solid fa-arrow-right ml-1"></i>';
+                mcPassChallengeBtn.classList.replace('bg-amber-600', 'bg-emerald-600');
+                mcPassChallengeBtn.classList.replace('hover:bg-amber-700', 'hover:bg-emerald-700');
+            }
+
+            masterCoachModal.classList.remove('hidden');
+        }
+
+        mcPassChallengeBtn.addEventListener('click', async () => {
+            masterCoachModal.classList.add('hidden');
+            
+            // Force save feedback and complete session
+            isSimulating = false;
+            try {
+                const sessionRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'sessions', currentSessionId);
+                await updateDoc(sessionRef, { feedback: "Desafío concluido mediante evaluación del Master Coach." });
+            } catch (e) {
+                console.error("Failed to save completion", e);
+            }
+            
+            loadChallenges();
+            showView('dashboard');
+        });
+
+        // Evaluation Logic
+        evaluateBtn.addEventListener('click', async () => {
+            if (chatHistory.length < 2) {
+                alert("La sesión es muy corta para ser evaluada. Interactúa un poco más.");
+                return;
+            }
+            
+            if(confirm("¿Estás seguro que deseas finalizar la sesión y recibir evaluación? Ya no podrás enviar más mensajes en esta sesión.")) {
+                isSimulating = false;
+                evaluateBtn.classList.add('hidden');
+                document.querySelector('.posture-radio').closest('.max-w-4xl').classList.add('hidden');
+                
+                // Show loading modal state
+                evaluationModal.classList.remove('hidden');
+                evaluationContent.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-10 text-gray-500">
+                        <i class="fa-solid fa-magnifying-glass-chart text-4xl mb-4 animate-bounce text-indigo-400"></i>
+                        <p class="text-lg font-medium">Analizando tu desempeño...</p>
+                        <p class="text-sm">Evaluando posturas, facilitación y niveles de cambio.</p>
+                    </div>
+                `;
+
+                // Fetch evaluation
+                const feedbackText = await generateGeminiResponse("[COMANDO_EVALUACION]");
+                
+                if (feedbackText) {
+                    // Save feedback to Firestore
+                    try {
+                        const sessionRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'sessions', currentSessionId);
+                        await updateDoc(sessionRef, { feedback: feedbackText });
+                    } catch (e) {
+                        console.error("Failed to save feedback", e);
+                    }
+                    
+                    showFeedbackModal(feedbackText);
+                }
+            }
+        });
+
+        function showFeedbackModal(markdownText) {
+            evaluationModal.classList.remove('hidden');
+            
+            // Simple markdown parser for the specific formatting requested
+            let htmlContent = markdownText
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^\*\* (.*$)/gim, '<p><strong>$1</strong></p>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/^\* (.*$)/gim, '<li>$1</li>')
+                .replace(/^- (.*$)/gim, '<li>$1</li>');
+            
+            // wrap list items in ul
+            htmlContent = htmlContent.replace(/(<li>.*<\/li>)/s, '<ul class="mb-4">$1</ul>');
+            
+            // replace newlines with br (outside of tags)
+            htmlContent = htmlContent.split('\n').join('<br>');
+            // cleanup double brs after tags
+            htmlContent = htmlContent.replace(/<\/h3><br>/g, '</h3>').replace(/<\/ul><br>/g, '</ul>');
+
+            evaluationContent.innerHTML = htmlContent;
+        }
+
+        closeEvalModalBtn.addEventListener('click', () => {
+            evaluationModal.classList.add('hidden');
+        });
+        
+        doneEvalBtn.addEventListener('click', () => {
+            evaluationModal.classList.add('hidden');
+        });
+
+    </script>
+</body>
+</html>
